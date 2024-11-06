@@ -27,7 +27,7 @@ public class SongController {
     private SongService songService;
 
     @PostMapping(consumes = "application/json", produces = "application/json")
-    public ResponseEntity<Object> createSong(@Valid @RequestBody SongDTO songDTO) throws Exception {
+    public ResponseEntity<Map<String, Integer>> createSong(@Valid @RequestBody SongDTO songDTO) throws Exception {
         try {
             Song createdSong = songService.createSong(songService.convertToEntity(songDTO));
             return ResponseEntity.ok().body(Map.of("id", createdSong.getId()));
