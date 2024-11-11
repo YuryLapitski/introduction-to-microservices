@@ -19,7 +19,7 @@ import java.util.function.Function;
 
 @Service
 public class ResourceService {
-    private static final String SONG_SERVICE_URL = "http://song-service:8081/songs";
+    private static final String SONG_SERVICE_URL = "http://localhost:8081/songs";
 
     @Autowired
     private ResourceRepository resourceRepository;
