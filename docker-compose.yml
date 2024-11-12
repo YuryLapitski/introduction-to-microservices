@@ -36,14 +36,15 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://resource-postgres:5432/resource
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
-      SONG_SERVICE_URL: http://song-service:8081
+      SONG_SERVICE_URL: http://song-service:8080
+      SERVER_PORT: 8080
     networks:
       - app-network
 
   song-service:
     build: ./song-service
     ports:
-      - "8081:8081"
+      - "8081:8080"
     depends_on:
       - song-postgres
       - resource-service
@@ -51,6 +52,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://song-postgres:5432/song
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      SERVER_PORT: 8080
     networks:
       - app-network
 
