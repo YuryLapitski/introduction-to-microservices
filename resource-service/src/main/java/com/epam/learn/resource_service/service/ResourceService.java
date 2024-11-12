@@ -28,7 +28,7 @@ public class ResourceService {
     private Function<byte[], Map<String, String>> mp3MetadataExtractor;
     @Autowired
     private RestTemplate restTemplate;
-    @Value("${song.service.url:http://localhost:8081}")
+    @Value("${song.service.url}")
     private String songServiceUrl;
 
     @Transactional
