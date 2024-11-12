@@ -12,5 +12,5 @@ RUN mkdir -p target && java -Djarmode=layertools -jar target/*.jar extract
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 COPY --from=build /app/target/*.jar /app/app.jar
-EXPOSE 8081
+EXPOSE 8082
 ENTRYPOINT ["java","-jar","/app/app.jar"]

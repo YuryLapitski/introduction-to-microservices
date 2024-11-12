@@ -5,6 +5,7 @@ services:
     environment:
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: resource
     ports:
       - "5432:5432"
     volumes:
@@ -17,6 +18,7 @@ services:
     environment:
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: song
     ports:
       - "5434:5432"
     volumes:
@@ -27,26 +29,26 @@ services:
   resource-service:
     build: ./resource-service
     ports:
-      - "8080:8080"
+      - "8080:8081"
     depends_on:
       - resource-postgres
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://resource-postgres:5432/postgres
+      SPRING_DATASOURCE_URL: jdbc:postgresql://resource-postgres:5432/resource
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
-      SONG_SERVICE_URL: http://song-service:8081
+      SONG_SERVICE_URL: http://song-service:8082
     networks:
       - app-network
 
   song-service:
     build: ./song-service
     ports:
-      - "8081:8081"
+      - "8081:8082"
     depends_on:
       - song-postgres
       - resource-service
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://song-postgres:5432/postgres
+      SPRING_DATASOURCE_URL: jdbc:postgresql://song-postgres:5432/song
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
     networks:
@@ -55,4 +57,3 @@ services:
 networks:
   app-network:
     driver: bridge
-
