@@ -4,6 +4,7 @@ import com.epam.learn.resource_service.dao.ResourceRepository;
 import com.epam.learn.resource_service.model.Resource;
 import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
@@ -19,7 +20,7 @@ import java.util.function.Function;
 
 @Service
 public class ResourceService {
-    private static final String SONG_SERVICE_URL = "http://localhost:8081/songs";
+    private static final String CREATE_SONG_ENDPOINT = "/songs";
 
     @Autowired
     private ResourceRepository resourceRepository;
@@ -27,6 +28,8 @@ public class ResourceService {
     private Function<byte[], Map<String, String>> mp3MetadataExtractor;
     @Autowired
     private RestTemplate restTemplate;
+    @Value("${song.service.url:http://localhost:8081}")
+    private String songServiceUrl;
 
     @Transactional
     public Resource createResource(byte[] audioData) throws IOException {
@@ -61,7 +64,7 @@ public class ResourceService {
         songMetadata.put("resourceId", String.valueOf(savedResource.getId()));
         HttpEntity<Map<String, String>> requestEntity = new HttpEntity<>(songMetadata);
         try {
-            restTemplate.postForObject(SONG_SERVICE_URL, requestEntity, Void.class);
+            restTemplate.postForObject(songServiceUrl + CREATE_SONG_ENDPOINT, requestEntity, Void.class);
         } catch (HttpClientErrorException ex) {
             HttpStatusCode statusCode = ex.getStatusCode();
             if (statusCode.is4xxClientError()) {
