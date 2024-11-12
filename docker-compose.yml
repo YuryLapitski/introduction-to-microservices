@@ -5,26 +5,22 @@ services:
     environment:
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: resource
+      POSTGRES_DB: ${RESOURCE_DB_NAME}
     ports:
       - "5432:5432"
     volumes:
       - ./init-scripts-resource:/docker-entrypoint-initdb.d
-    networks:
-      - app-network
 
   song-postgres:
     image: postgres:17-alpine
     environment:
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: song
+      POSTGRES_DB: ${SONG_DB_NAME}
     ports:
       - "5434:5432"
     volumes:
       - ./init-scripts-song:/docker-entrypoint-initdb.d
-    networks:
-      - app-network
 
   resource-service:
     build: ./resource-service
@@ -33,13 +29,11 @@ services:
     depends_on:
       - resource-postgres
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://resource-postgres:5432/resource
+      SPRING_DATASOURCE_URL: ${RESOURCE_DB_URL}
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
-      SONG_SERVICE_URL: http://song-service:8080
-      SERVER_PORT: 8080
-    networks:
-      - app-network
+      SONG_SERVICE_URL: ${SONG_SERVICE_URL}
+      SERVER_PORT: ${APP_SERVER_PORT}
 
   song-service:
     build: ./song-service
@@ -49,13 +43,7 @@ services:
       - song-postgres
       - resource-service
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://song-postgres:5432/song
+      SPRING_DATASOURCE_URL: ${SONG_DB_URL}
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
-      SERVER_PORT: 8080
-    networks:
-      - app-network
-
-networks:
-  app-network:
-    driver: bridge
+      SERVER_PORT: ${APP_SERVER_PORT}
