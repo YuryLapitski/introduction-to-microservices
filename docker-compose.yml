@@ -4,12 +4,8 @@ services:
     build: ./eureka-server
     ports:
       - "8761:8761"
-    hostname: eureka-server
     environment:
-      EUREKA_INSTANCE_HOSTNAME: eureka-server
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
-    networks:
-      - app-network
 
   gateway-service:
     build: ./gateway-service
@@ -20,8 +16,6 @@ services:
     environment:
       EUREKA_INSTANCE_HOSTNAME: eureka-server
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
-    networks:
-      - app-network
 
   resource-postgres:
     image: postgres:17-alpine
@@ -29,12 +23,8 @@ services:
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${RESOURCE_DB_NAME}
-    ports:
-      - "5432:5432"
     volumes:
       - ./init-scripts-resource:/docker-entrypoint-initdb.d
-    networks:
-      - app-network
 
   song-postgres:
     image: postgres:17-alpine
@@ -42,17 +32,11 @@ services:
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${SONG_DB_NAME}
-    ports:
-      - "5434:5432"
     volumes:
       - ./init-scripts-song:/docker-entrypoint-initdb.d
-    networks:
-      - app-network
 
   resource-service:
     build: ./resource-service
-    ports:
-      - "8080"
     depends_on:
       - resource-postgres
       - eureka-server
@@ -61,16 +45,12 @@ services:
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       SONG_SERVICE_URL: ${SONG_SERVICE_URL}
-      SERVER_PORT: ${APP_SERVER_PORT}
-      EUREKA_INSTANCE_HOSTNAME: eureka-server
+      SERVER_PORT: 8081
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
-    networks:
-      - app-network
+
 
   song-service:
     build: ./song-service
-    ports:
-      - "8080"
     depends_on:
       - song-postgres
       - resource-service
@@ -79,14 +59,7 @@ services:
       SPRING_DATASOURCE_URL: ${SONG_DB_URL}
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
-      SERVER_PORT: ${APP_SERVER_PORT}
-      EUREKA_INSTANCE_HOSTNAME: eureka-server
+      SERVER_PORT: 8082
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
     deploy:
       replicas: 2
-    networks:
-      - app-network
-
-networks:
-  app-network:
-    driver: bridge
