@@ -1,5 +1,28 @@
 version: '3.8'
 services:
+  eureka-server:
+    build: ./eureka-server
+    ports:
+      - "8761:8761"
+    hostname: eureka-server
+    environment:
+      EUREKA_INSTANCE_HOSTNAME: eureka-server
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    networks:
+      - app-network
+
+  gateway-service:
+    build: ./gateway-service
+    ports:
+      - "8080:8080"
+    depends_on:
+      - eureka-server
+    environment:
+      EUREKA_INSTANCE_HOSTNAME: eureka-server
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    networks:
+      - app-network
+
   resource-postgres:
     image: postgres:17-alpine
     environment:
@@ -10,6 +33,8 @@ services:
       - "5432:5432"
     volumes:
       - ./init-scripts-resource:/docker-entrypoint-initdb.d
+    networks:
+      - app-network
 
   song-postgres:
     image: postgres:17-alpine
@@ -21,29 +46,47 @@ services:
       - "5434:5432"
     volumes:
       - ./init-scripts-song:/docker-entrypoint-initdb.d
+    networks:
+      - app-network
 
   resource-service:
     build: ./resource-service
     ports:
-      - "8080:8080"
+      - "8080"
     depends_on:
       - resource-postgres
+      - eureka-server
     environment:
       SPRING_DATASOURCE_URL: ${RESOURCE_DB_URL}
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       SONG_SERVICE_URL: ${SONG_SERVICE_URL}
       SERVER_PORT: ${APP_SERVER_PORT}
+      EUREKA_INSTANCE_HOSTNAME: eureka-server
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    networks:
+      - app-network
 
   song-service:
     build: ./song-service
     ports:
-      - "8081:8080"
+      - "8080"
     depends_on:
       - song-postgres
       - resource-service
+      - eureka-server
     environment:
       SPRING_DATASOURCE_URL: ${SONG_DB_URL}
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       SERVER_PORT: ${APP_SERVER_PORT}
+      EUREKA_INSTANCE_HOSTNAME: eureka-server
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    deploy:
+      replicas: 2
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
