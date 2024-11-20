@@ -1,9 +1,10 @@
-package com.epam.learn.song_service.service;
+package com.epam.learn.song_service.service.validator;
 
 import com.epam.learn.song_service.dao.SongRepository;
 import com.epam.learn.song_service.dto.SongDTO;
 import com.epam.learn.song_service.model.Song;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
@@ -15,6 +16,9 @@ public class SongService {
     private SongRepository songRepository;
 
     public Song createSong(Song song) {
+        if (songRepository.existsById(song.getId())) {
+            throw new DataIntegrityViolationException("Metadata for resource ID=" + song.getId() + " already exists.");
+        }
         return songRepository.save(song);
     }
 
@@ -38,22 +42,22 @@ public class SongService {
 
     public Song convertToEntity(SongDTO dto) {
         Song song = new Song();
+        song.setId(dto.getId());
         song.setName(dto.getName());
         song.setArtist(dto.getArtist());
         song.setAlbum(dto.getAlbum());
-        song.setLength(dto.getLength());
-        song.setResourceId(dto.getResourceId());
+        song.setDuration(dto.getDuration());
         song.setYear(dto.getYear());
         return song;
     }
 
     public SongDTO convertToDTO(Song song) {
         SongDTO dto = new SongDTO();
+        dto.setId(song.getId());
         dto.setName(song.getName());
         dto.setArtist(song.getArtist());
         dto.setAlbum(song.getAlbum());
-        dto.setLength(song.getLength());
-        dto.setResourceId(song.getResourceId());
+        dto.setDuration(song.getDuration());
         dto.setYear(song.getYear());
         return dto;
     }

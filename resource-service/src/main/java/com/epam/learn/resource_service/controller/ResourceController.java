@@ -66,6 +66,8 @@ public class ResourceController {
         try {
             Map<String, List<Integer>> deletedIds = Map.of("ids", resourceService.deleteResources(id));
             return ResponseEntity.ok(deletedIds);
+        } catch (BadRequestException e) {
+            throw new BadRequestException(e.getMessage());
         } catch (NumberFormatException e) {
             throw new BadRequestException("Invalid id format. ID should be a CSV string of integer.");
         } catch (Exception e) {
