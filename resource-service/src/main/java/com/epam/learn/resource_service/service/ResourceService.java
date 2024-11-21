@@ -21,6 +21,7 @@ import java.util.function.Function;
 @Service
 public class ResourceService {
     private static final String CREATE_SONG_ENDPOINT = "/songs";
+    private static final String DELETE_SONG_ENDPOINT = "/songs?id=";
 
     @Autowired
     private ResourceRepository resourceRepository;
@@ -46,7 +47,8 @@ public class ResourceService {
         return resourceRepository.findById(id).map(Resource::getData).orElseThrow();
     }
 
-    public List<Integer> deleteResources(String idsCSV) {
+    @Transactional
+    public List<Integer> deleteResources(String idsCSV) throws BadRequestException {
         List<Integer> ids = Arrays.stream(idsCSV.split(","))
                 .map(Integer::parseInt)
                 .toList();
@@ -55,13 +57,15 @@ public class ResourceService {
                 .filter(id -> resourceRepository.existsById(id))
                 .toList();
 
+        deleteRelatedSongs(idsCSV);
         resourceRepository.deleteAllById(existingIds);
+
         return existingIds;
     }
 
     private void saveMetaData(byte[] audioData, Resource savedResource) throws BadRequestException {
         var songMetadata = mp3MetadataExtractor.apply(audioData);
-        songMetadata.put("resourceId", String.valueOf(savedResource.getId()));
+        songMetadata.put("id", String.valueOf(savedResource.getId()));
         HttpEntity<Map<String, String>> requestEntity = new HttpEntity<>(songMetadata);
         try {
             restTemplate.postForObject(songServiceUrl + CREATE_SONG_ENDPOINT, requestEntity, Void.class);
@@ -71,6 +75,19 @@ public class ResourceService {
                 throw new BadRequestException("Failed to create song due to validation errors: " + ex.getResponseBodyAsString());
             } else {
                 throw new RuntimeException("Internal server error occurred while calling song-service");
+            }
+        }
+    }
+
+    private void deleteRelatedSongs(String ids) throws BadRequestException {
+        try {
+            restTemplate.delete(songServiceUrl + DELETE_SONG_ENDPOINT + ids);
+        } catch (HttpClientErrorException ex) {
+            HttpStatusCode statusCode = ex.getStatusCode();
+            if (statusCode.is4xxClientError()) {
+                throw new BadRequestException("Failed to delete song due to client error: " + ex.getResponseBodyAsString());
+            } else {
+                throw new RuntimeException("Internal server error occurred while calling song-service to delete a song");
             }
         }
     }

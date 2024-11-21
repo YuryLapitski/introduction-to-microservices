@@ -2,10 +2,11 @@ package com.epam.learn.song_service.controller;
 
 import com.epam.learn.song_service.dto.SongDTO;
 import com.epam.learn.song_service.model.Song;
-import com.epam.learn.song_service.service.SongService;
+import com.epam.learn.song_service.service.validator.SongService;
 import jakarta.validation.Valid;
 import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,6 +32,8 @@ public class SongController {
         try {
             Song createdSong = songService.createSong(songService.convertToEntity(songDTO));
             return ResponseEntity.ok().body(Map.of("id", createdSong.getId()));
+        } catch (DataIntegrityViolationException e) {
+            throw new DataIntegrityViolationException(e.getMessage());
         } catch (Exception e) {
             throw new Exception("An internal server error has occurred. " + e.getMessage());
         }
@@ -67,6 +70,5 @@ public class SongController {
         } catch (Exception e) {
             throw new Exception("An internal server error has occurred. " + e.getMessage());
         }
-
     }
 }
